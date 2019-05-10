@@ -198,7 +198,7 @@ public class home extends AppCompatActivity
         navUsermail.setText(currentUser.getEmail());
         navUsername.setText(currentUser.getDisplayName());
 
-
+//remove later
 
 
     }
