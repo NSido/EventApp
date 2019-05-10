@@ -14,13 +14,16 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.HashMap;
+import java.util.Map;
 
+public class RegisterActivity extends AppCompatActivity {
 
-public class LoginActivity extends AppCompatActivity {
-
-    private Button mLogin;
-    private EditText mEmail, mPassword;
+    private Button mRegister;
+    private EditText mEmail, mPassword, mName;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener FirebaseAuthStateListener;
@@ -28,36 +31,49 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_register);
+        getSupportActionBar().setTitle("Create Account");
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseAuthStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if (user != null) {
-                    Intent intent = new Intent(LoginActivity.this, home.class);
+                if (user !=null) {
+                    Intent intent = new Intent(RegisterActivity.this, home.class);
                     startActivity(intent);
-                    Toast.makeText(LoginActivity.this,"Successfully logged in",Toast.LENGTH_SHORT).show();
                 }
 
             }
         };
 
-        mLogin = (Button) findViewById(R.id.login);
+        mRegister = (Button) findViewById(R.id.register);
+
+        mName = (EditText) findViewById(R.id.name);
         mEmail = (EditText) findViewById(R.id.email);
         mPassword = (EditText) findViewById(R.id.password);
 
-        mLogin.setOnClickListener(new View.OnClickListener() {
+        mRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                final String name = mName.getText().toString();
                 final String email = mEmail.getText().toString();
                 final String password = mPassword.getText().toString();
-                mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+
+                mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (!task.isSuccessful()) {
-                            Toast.makeText(LoginActivity.this, "sign in error", Toast.LENGTH_SHORT).show();
+                        if (!task.isSuccessful()){
+                            Toast.makeText(RegisterActivity.this, "sign up error", Toast.LENGTH_SHORT).show();
+                        }else{
+                            String userId = mAuth.getCurrentUser().getUid();
+                            DatabaseReference currentUserDb = FirebaseDatabase.getInstance().getReference().child("users").child(userId);
+
+                            Map UserInfo = new HashMap<>();
+                            UserInfo.put("name",name);
+                            UserInfo.put("email",email);
+
+                            currentUserDb.updateChildren(UserInfo);
                         }
 
                     }
@@ -69,6 +85,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
     }
+
     @Override
     protected void onStart() {
         super.onStart();
